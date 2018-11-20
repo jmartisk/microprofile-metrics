@@ -45,9 +45,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(Arquillian.class)
-public class CountedMethodBeanTest {
+public class ConcurrentGaugedMethodBeanTest {
 
-    private final static String COUNTER_NAME = "countedMethod";
+    private final static String COUNTER_NAME = "cGaugedMethod";
 
     private final static AtomicLong COUNTER_COUNT = new AtomicLong();
 
@@ -55,7 +55,7 @@ public class CountedMethodBeanTest {
     static Archive<?> createTestArchive() {
         return ShrinkWrap.create(JavaArchive.class)
             // Test bean
-            .addClass(CountedMethodBean.class)
+            .addClass(ConcurrentGaugedMethodBean.class)
             // Bean archive deployment descriptor
             .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
     }
@@ -64,7 +64,7 @@ public class CountedMethodBeanTest {
     private MetricRegistry registry;
 
     @Inject
-    private CountedMethodBean<Long> bean;
+    private ConcurrentGaugedMethodBean<Long> bean;
 
     @Test
     @InSequence(1)

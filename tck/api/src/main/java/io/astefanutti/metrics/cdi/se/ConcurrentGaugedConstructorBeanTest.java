@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 import org.eclipse.microprofile.metrics.Counter;
@@ -35,15 +36,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(Arquillian.class)
-public class CounterFieldBeanTest {
+public class ConcurrentGaugedConstructorBeanTest {
 
-    private final static String COUNTER_NAME = MetricRegistry.name(CounterFieldBean.class, "counterName");
+    private final static String COUNTER_NAME = MetricRegistry.name(ConcurrentGaugedConstructorBean.class, "cGaugedConstructor");
 
     @Deployment
-    public static Archive<?> createTestArchive() {
+    static Archive<?> createTestArchive() {
         return ShrinkWrap.create(JavaArchive.class)
             // Test bean
-            .addClass(CounterFieldBean.class)
+            .addClass(ConcurrentGaugedConstructorBean.class)
             // Bean archive deployment descriptor
             .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
     }
@@ -52,23 +53,29 @@ public class CounterFieldBeanTest {
     private MetricRegistry registry;
 
     @Inject
-    private CounterFieldBean bean;
+    private Instance<ConcurrentGaugedConstructorBean> instance;
+
+    //This test case becomes irrelevant as the registry already contains Timers from other test cases.
+    /*
+    @Test
+    @InSequence(1)
+    public void countedConstructorNotCalledYet() {
+        assertThat("Counter is not registered correctly", registry.getCounters().keySet(), is(empty()));
+    }
+    */
 
     @Test
     @InSequence(1)
-    public void counterFieldRegistered() {
-        assertThat("Counter is not registered correctly", registry.getCounters(), hasKey(COUNTER_NAME));
-    }
+    public void countedConstructorCalled() {
+        long count = 1L + Math.round(Math.random() * 10);
+        for (int i = 0; i < count; i++) {
+            instance.get();
+        }
 
-    @Test
-    @InSequence(2)
-    public void incrementCounterField() {
         assertThat("Counter is not registered correctly", registry.getCounters(), hasKey(COUNTER_NAME));
         Counter counter = registry.getCounters().get(COUNTER_NAME);
 
-        // Call the increment method and assert the counter is up-to-date
-        long value = Math.round(Math.random() * Long.MAX_VALUE);
-        bean.increment(value);
-        assertThat("Counter value is incorrect", counter.getCount(), is(equalTo(value)));
+        // Make sure that the counter has been called
+        assertThat("Counter count is incorrect", counter.getCount(), is(equalTo(count)));
     }
 }

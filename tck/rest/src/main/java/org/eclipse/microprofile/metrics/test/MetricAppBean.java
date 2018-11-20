@@ -76,7 +76,7 @@ public class MetricAppBean {
         counter.inc();
     }
 
-    @Counted(name = "metricTest.test1.countMeA", monotonic = true, absolute = true)
+    @Counted(name = "metricTest.test1.countMeA", absolute = true)
     public void countMeA() {
 
     }
