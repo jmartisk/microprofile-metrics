@@ -161,6 +161,29 @@ public abstract class MetricRegistry {
      */
     public abstract Counter counter(Metadata metadata);
 
+    /**
+     * Return the {@link ConcurrentGauge} registered under this name; or create and register
+     * a new {@link ConcurrentGauge} if none is registered.
+     * If a {@link ConcurrentGauge} was created, a {@link Metadata} object will be registered with the name and type.
+     *
+     * @param name the name of the metric
+     * @return a new or pre-existing {@link ConcurrentGauge}
+     */
+    public abstract ConcurrentGauge concurrentGauge(String name);
+
+    /**
+     * Return the {@link ConcurrentGauge} registered under the {@link Metadata}'s name; or create and register
+     * a new {@link ConcurrentGauge} if none is registered.
+     * If a {@link ConcurrentGauge} was created, the provided {@link Metadata} object will be registered.
+     * <p>
+     * Note: The {@link Metadata} will not be updated if the metric is already registered.
+     * </p>
+     *
+     * @param metadata the name of the metric
+     * @return a new or pre-existing {@link ConcurrentGauge}
+     */
+    public abstract ConcurrentGauge concurrentGauge(Metadata metadata);
+
 
 
     /**
@@ -289,6 +312,22 @@ public abstract class MetricRegistry {
      * @return all the counters in the registry
      */
     public abstract SortedMap<String, Counter> getCounters(MetricFilter filter);
+
+    /**
+     * Returns a map of all the concurrent gauges in the registry and their names.
+     *
+     * @return all the concurrent gauges in the registry
+     */
+    public abstract SortedMap<String, ConcurrentGauge> getConcurrentGauges();
+
+    /**
+     * Returns a map of all the concurrent gauges in the registry and their names which match the given
+     * filter.
+     *
+     * @param filter    the metric filter to match
+     * @return all the concurrent gauges in the registry
+     */
+    public abstract SortedMap<String, ConcurrentGauge> getConcurrentGauges(MetricFilter filter);
 
     /**
      * Returns a map of all the histograms in the registry and their names.
