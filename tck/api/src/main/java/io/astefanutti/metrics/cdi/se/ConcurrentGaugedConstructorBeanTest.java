@@ -22,8 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-
-import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -72,10 +71,12 @@ public class ConcurrentGaugedConstructorBeanTest {
             instance.get();
         }
 
-        assertThat("Counter is not registered correctly", registry.getCounters(), hasKey(COUNTER_NAME));
-        Counter counter = registry.getCounters().get(COUNTER_NAME);
+        assertThat("Concurrent Gauge is not registered correctly", registry.getConcurrentGauges(), hasKey(COUNTER_NAME));
+        ConcurrentGauge concurrentGauge = registry.getConcurrentGauges().get(COUNTER_NAME);
 
         // Make sure that the counter has been called
-        assertThat("Counter count is incorrect", counter.getCount(), is(equalTo(count)));
+        assertThat("Concurrent gauge max is incorrect", concurrentGauge.getMax(), is(equalTo(count)));
+        assertThat("Concurrent gauge min is incorrect", concurrentGauge.getMin(), is(equalTo(0)));
+        assertThat("Concurrent gauge count is incorrect", concurrentGauge.getCount(), is(equalTo(0)));
     }
 }

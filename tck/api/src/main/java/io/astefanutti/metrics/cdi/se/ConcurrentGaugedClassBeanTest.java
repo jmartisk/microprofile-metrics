@@ -39,14 +39,14 @@
 package io.astefanutti.metrics.cdi.se;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
+import io.astefanutti.metrics.cdi.se.util.MetricsUtil;
 import java.util.Set;
-
 import javax.inject.Inject;
-
-import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.ConcurrentGauge;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.hamcrest.Matchers;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -59,8 +59,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.astefanutti.metrics.cdi.se.util.MetricsUtil;
-
 @RunWith(Arquillian.class)
 public class ConcurrentGaugedClassBeanTest {
 
@@ -68,8 +66,8 @@ public class ConcurrentGaugedClassBeanTest {
 
     private static final String[] METHOD_NAMES = { "countedMethodOne", "countedMethodTwo", "countedMethodProtected", "countedMethodPackagedPrivate" };
 
-    private static final Set<String> COUNTER_NAMES = MetricsUtil.absoluteMetricNames(ConcurrentGaugedClassBean.class, "cGaugedClass", METHOD_NAMES,
-                                                                                     CONSTRUCTOR_NAME);
+    private static final Set<String> C_GAUGED_NAMES = MetricsUtil.absoluteMetricNames(ConcurrentGaugedClassBean.class, "cGaugedClass", METHOD_NAMES,
+                                                                                      CONSTRUCTOR_NAME);
 
     @Deployment
     static Archive<?> createTestArchive() {
@@ -89,15 +87,18 @@ public class ConcurrentGaugedClassBeanTest {
     @Test
     @InSequence(1)
     public void countedMethodsNotCalledYet() {
-        assertThat("Counters are not registered correctly", registry.getCounters().keySet(), is(equalTo(COUNTER_NAMES)));
+        assertThat("Concurrent Gauges are not registered correctly", registry.getConcurrentGauges().keySet(),
+                   is(equalTo(C_GAUGED_NAMES)));
         // Make sure that the counters haven't been incremented
-        assertThat("Counter counts are incorrect", registry.getCounters().values(), everyItem(Matchers.<Counter>hasProperty("count", equalTo(0L))));
+        assertThat("Concurrent Gauges max values are incorrect", registry.getConcurrentGauges().values(),
+                   everyItem(Matchers.<ConcurrentGauge>hasProperty("max", equalTo(0L))));
     }
 
     @Test
     @InSequence(2)
     public void callCountedMethodsOnce() {
-        assertThat("Counters are not registered correctly", registry.getCounters().keySet(), is(equalTo(COUNTER_NAMES)));
+        assertThat("Concurrent Gauges are not registered correctly", registry.getConcurrentGauges().keySet(),
+                   is(equalTo(C_GAUGED_NAMES)));
 
         // Call the counted methods and assert they're back to zero
         bean.countedMethodOne();
@@ -107,6 +108,11 @@ public class ConcurrentGaugedClassBeanTest {
         bean.countedMethodPackagedPrivate();
 
         // Make sure that the counters are back to zero
-        assertThat("Counter counts are incorrect", registry.getCounters().values(), everyItem(Matchers.<Counter>hasProperty("count", equalTo(0L))));
+        assertThat("Concurrent Gauges counts are incorrect", registry.getConcurrentGauges().values(),
+                   everyItem(Matchers.<ConcurrentGauge>hasProperty("count", equalTo(0L))));
+
+        // Make sure that the max is one
+        assertThat("Concurrent Gauges counts are incorrect", registry.getConcurrentGauges().values(),
+                   everyItem(Matchers.<ConcurrentGauge>hasProperty("count", equalTo(1L))));
     }
 }
