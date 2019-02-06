@@ -960,6 +960,7 @@ public class MpMetricTest {
         private String getBaseUnitAsPrometheusString(String unit) {
             String out;
             switch (unit) {
+            case "seconds":
             case "milliseconds":
                 out = "seconds";
                 break;
